@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro AI News Studio</title>
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --accent: #00ffcc;
+            --bg: #050a10;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* 🛠 উন্নত কন্ট্রোল প্যানেল */
+        #ui {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(10, 20, 30, 0.98);
+            backdrop-filter: blur(00px);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-bottom: 3px solid var(--primary);
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hide-ui { transform: translateY(-105%); }
+
+        .control-group {
+            width: 85%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            background: #111;
+            color: var(--accent);
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .upload-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1a2530;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 12px 30px;
+            background: var(--primary);
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover { background: var(--accent); transform: scale(1.02); }
+
+        /* 🏢 ভার্চুয়াল স্টুডিও */
+        #studio {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-size: cover;
+            background-position: center;
+            background-image: url('https://www.image2url.com/r2/default/images/1776139435170-4e69ea4e-eb18-42c0-8ad0-8c9c9349e8be.png'); /* ডিফল্ট ইমেজ */
+            transition: background 0.5s ease;
+        }
+
+        #screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4); /* ইমেজকে একটু ডার্ক রাখা নিউজ ফুটিয়ে তোলার জন্য */
+        }
+
+        #screen {
+            width: 92vw;
+            height: 80vh;
+            border: 4px solid rgba(0, 210, 255, 0.5);
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(0px);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 📰 দৌড়ানো বড় নিউজ */
+        #main-news-container {
+            position: absolute;
+            top: 40%;
+            width: 100%;
+            height: 120px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        #news-text {
+            white-space: nowrap;
+            font-size: 65px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 2px 2px 15px rgba(0, 0, 0, 0.8), 0 0 25px var(--primary);
+            position: absolute;
+            will-change: transform;
+        }
+
+        /* 📺 ব্রেকিং বার */
+        #ticker-bar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 55px;
+            background: linear-gradient(to right, #900, #f00);
+            border-top: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #ticker-title {
+            background: #fff;
+            color: #000;
+            padding: 0 20px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            font-weight: 900;
+            font-size: 18px;
+            z-index: 10;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+        }
+
+        .ticker-move {
+            display: inline-block;
+            white-space: nowrap;
+            padding-left: 100%;
+            animation: moveTicker 22s linear infinite;
+            font-size: 22px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        @keyframes moveTicker {
+            from { transform: translateX(0); }
+            to { transform: translateX(-100%); }
+        }
+
+        #edit-btn {
+            position: fixed;
+            bottom: 75px;
+            right: 25px;
+            background: rgba(0, 210, 255, 0.3);
+            color: white;
+            border: 1px solid var(--primary);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 2000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <div class="control-group">
+        <textarea id="inputText" placeholder="প্রতি লাইনে নিউজ লিখুন..."></textarea>
+        
+        <div class="upload-area">
+            <span>স্টুডিও ব্যাকগ্রাউন্ড:</span>
+            <input type="file" id="bgInput" accept="image/*">
+        </div>
+        
+        <button onclick="startNews()">▶ লাইভ ব্রডকাস্টিং শুরু করুন</button>
+    </div>
+</div>
+
+<button id="edit-btn" onclick="showUI()">EDIT</button>
+
+<div id="studio">
+    <div id="screen-overlay"></div>
+    <div id="screen">
+        <div style="padding: 20px; display: flex; justify-content: space-between;">
+            <span style="color: var(--accent); font-weight: bold; font-size: 20px;">🌐 BD SHOTTO SHONGBAD NEWS LIVE</span>
+            <span id="clock" style="color: #fff; font-family: monospace; font-size: 20px;"></span>
+        </div>
+        
+        <div id="main-news-container">
+            <div id="news-text">প্রস্তুত...</div>
+        </div>
+
+        <div id="ticker-bar">
+            <div id="ticker-title">ব্রেকিং নিউজ</div>
+            <div class="ticker-move">দেশ ও বিদেশের সর্বশেষ সংবাদ নিয়ে আমরা আছি আপনার সাথে • সত্যের পথে অবিচল • BD SHOTTO SHONGBAD 2026 •</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let lines = [];
+    let currentIndex = 0;
+    const synth = window.speechSynthesis;
+
+    // ব্যাকগ্রাউন্ড ইমেজ পরিবর্তন
+    document.getElementById('bgInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('studio').style.backgroundImage = `url('${event.target.result}')`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // ঘড়ি আপডেট
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleTimeString();
+    }, 1000);
+
+    function startNews() {
+        const text = document.getElementById("inputText").value.trim();
+        if (!text) return alert("দয়া করে কিছু নিউজ লিখুন!");
+
+        lines = text.split(/\n+/).filter(l => l.trim());
+        currentIndex = 0;
+        document.getElementById("ui").classList.add("hide-ui");
+        playNext();
+    }
+
+    function showUI() {
+        document.getElementById("ui").classList.remove("hide-ui");
+        synth.cancel();
+    }
+
+    function playNext() {
+        if (currentIndex >= lines.length) {
+            document.getElementById("news-text").innerText = "ধন্যবাদ সাথে থাকার জন্য";
+            setTimeout(showUI, 3000);
+            return;
+        }
+
+        const currentLine = lines[currentIndex];
+        const el = document.getElementById("news-text");
+        el.innerText = currentLine;
+
+        // এনিমেশন রিসেট এবং স্টার্ট
+        const containerWidth = document.getElementById("main-news-container").offsetWidth;
+        el.style.transition = 'none';
+        el.style.transform = `translateX(${containerWidth}px)`;
+
+        setTimeout(() => {
+            // অক্ষরের সংখ্যার ওপর ভিত্তি করে গতি নির্ধারণ (নিউজ স্টাইল)
+            let duration = (currentLine.length * 0.15) + 6; 
+            el.style.transition = `transform ${duration}s linear`;
+            el.style.transform = `translateX(-110%)`;
+        }, 100);
+
+        // 🔊 উন্নত নিউজ ভয়েস সেটিংস
+        const utterance = new SpeechSynthesisUtterance(currentLine);
+        utterance.lang = 'bn-BD';
+        utterance.rate = 0.85;  // নিউজ পড়ার আদর্শ গতি
+        utterance.pitch = 1.0;  // ন্যাচারাল টোন
+        utterance.volume = 1.0;
+
+        // ভালো মানের ভয়েস খোঁজা
+        const voices = synth.getVoices();
+        const bdVoice = voices.find(v => v.lang.includes('BD') || v.lang.includes('bn'));
+        if (bdVoice) utterance.voice = bdVoice;
+
+        utterance.onend = () => {
+            currentIndex++;
+            setTimeout(playNext, 800);
+        };
+
+        synth.speak(utterance);
+    }
+</script>
+
+</body>
+</html>
