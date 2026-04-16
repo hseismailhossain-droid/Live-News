@@ -3,131 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate AI News Studio</title>
+    <title>Ultimate News Studio V5 - Final</title>
     <style>
-        :root { --primary: #00d2ff; --bg: #050a10; }
-        body { margin: 0; background: var(--bg); font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white; height: 100vh; }
+        :root { --primary: #ff0000; --bg: #050a10; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white; }
 
-        /* UI Panel */
-        #ui { position: fixed; inset: 0; z-index: 1000; background: #0a141e; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
-        .hide-ui { transform: translateY(-100%); opacity: 0; pointer-events: none; }
-        .box { width: 90%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; }
-        textarea { width: 100%; height: 200px; background: #111; color: #00ffcc; border: 1px solid var(--primary); padding: 12px; border-radius: 8px; font-size: 16px; box-sizing: border-box; resize: none; }
-        button { padding: 15px; background: var(--primary); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
-
-        /* Studio Area */
-        #studio { width: 100vw; height: 100vh; background: #000 url('https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&q=80&w=2070') center/cover; display: flex; align-items: center; justify-content: center; }
-        #screen { width: 95%; height: 85%; border: 3px solid var(--primary); border-radius: 20px; background: rgba(0,0,0,0.6); overflow: hidden; position: relative; box-shadow: 0 0 30px rgba(0,210,255,0.3); }
-
-        /* News Animation */
-        #news-container { position: absolute; top: 40%; width: 100%; height: 120px; overflow: hidden; display: flex; align-items: center; }
+        /* Setup UI */
+        #ui { position: fixed; inset: 0; z-index: 5000; background: radial-gradient(circle, #1a2a3a, #000); display: flex; align-items: center; justify-content: center; transition: 0.8s; }
+        .hide-ui { opacity: 0; pointer-events: none; transform: scale(1.1); }
+        .setup-card { width: 90%; max-width: 600px; background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; border: 2px solid var(--primary); backdrop-filter: blur(20px); }
         
-        /* .news-item ক্লাসটি ডাইনামিক্যালি তৈরি হবে */
-        .news-item {
-            position: absolute;
-            white-space: nowrap;
-            font-size: clamp(30px, 8vw, 55px);
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 0 20px rgba(0,210,255,0.8), 2px 2px 5px #000;
-            left: 100%;
-            will-change: transform;
-        }
+        textarea { width: 100%; height: 120px; background: #000; border: 1px solid #444; color: #00f2ff; padding: 12px; border-radius: 8px; font-size: 15px; margin-bottom: 15px; resize: none; outline: none; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        select, input { padding: 12px; background: #111; color: #fff; border: 1px solid #444; border-radius: 8px; }
+        label { font-size: 12px; color: #aaa; margin-bottom: 5px; display: block; }
+        
+        .start-btn { width: 100%; padding: 18px; background: var(--primary); border: none; border-radius: 10px; font-weight: 900; font-size: 20px; cursor: pointer; color: white; text-transform: uppercase; }
 
-        @keyframes march {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(calc(-110% - 100vw)); }
-        }
+        /* Countdown */
+        #countdown { position: fixed; inset: 0; z-index: 4000; background: #000; display: none; align-items: center; justify-content: center; font-size: 180px; font-weight: 900; color: var(--primary); text-shadow: 0 0 50px var(--primary); }
+
+        /* Main Studio */
+        #studio { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: url('https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&q=80&w=2000') center/cover; }
+        #studio::before { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 0; }
+
+        header { position: absolute; top: 0; width: 100%; padding: 25px 50px; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-sizing: border-box; }
+        .logo-box { border-left: 8px solid var(--primary); padding-left: 15px; }
+        .logo-box h1 { margin: 0; font-size: 35px; letter-spacing: 2px; }
+        #clock-box { text-align: right; background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* News Display Area */
+        #display-area { flex: 1; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 100px; }
+        #news-image-container { width: 500px; height: 300px; margin-bottom: 30px; border: 5px solid #fff; border-radius: 15px; overflow: hidden; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.8); transform: translateY(20px); opacity: 0; transition: 0.8s; }
+        #news-image-container.show { display: block; transform: translateY(0); opacity: 1; }
+        #news-image-container img { width: 100%; height: 100%; object-fit: cover; }
+
+        #news-card { width: 85%; max-width: 1100px; background: rgba(0,0,0,0.85); padding: 50px; border-radius: 0 50px 0 50px; border-bottom: 6px solid var(--primary); backdrop-filter: blur(15px); opacity: 0; transform: scale(0.9); transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; }
+        #news-card.active { opacity: 1; transform: scale(1); }
+        #headline { font-size: 50px; font-weight: 900; margin: 0; color: #fff; line-height: 1.2; }
 
         /* Bottom Ticker */
-        #bar { position: absolute; bottom: 0; width: 100%; height: 55px; background: linear-gradient(to right, #900, #f00); border-top: 2px solid #fff; display: flex; align-items: center; }
-        #edit { position: fixed; bottom: 75px; right: 25px; background: var(--primary); width: 55px; height: 55px; border-radius: 50%; border: none; font-weight: bold; z-index: 1001; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        footer { position: absolute; bottom: 0; width: 100%; height: 70px; background: #000; display: flex; align-items: center; border-top: 4px solid var(--primary); z-index: 20; }
+        .breaking-tag { background: var(--primary); height: 100%; display: flex; align-items: center; padding: 0 35px; font-weight: 900; font-size: 24px; text-transform: uppercase; color: #fff; font-style: italic; }
+        marquee { font-size: 25px; font-weight: bold; flex: 1; color: #eee; }
+
+        #btn-close { position: fixed; top: 20px; right: 20px; z-index: 6000; background: rgba(255,0,0,0.5); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="ui">
-    <div class="box">
-        <h2 style="text-align:center; margin-bottom: 5px;">PRO NEWS STUDIO 2026</h2>
-        <p style="text-align:center; font-size: 12px; color: #aaa;">প্রতি লাইনে একটি করে খবর দিন (আনলিমিটেড)</p>
-        <textarea id="inputText" placeholder="১ম সংবাদ লিখে Enter দিন...&#10;২য় সংবাদ...&#10;৩য় সংবাদ..."></textarea>
-        <button onclick="startBroadcasting()">▶ লাইভ ব্রডকাস্টিং শুরু করুন</button>
+    <div class="setup-card">
+        <h1 style="text-align:center; color: #00f2ff; margin-bottom: 20px;">AI NEWS STUDIO PRO v5</h1>
+        <label>খবর লিখুন (খবর | ইমেজের লিঙ্ক):</label>
+        <textarea id="newsInput" placeholder="ঢাকা এখন তপ্ত শহর | https://example.com/image.jpg&#10;খেলাধুলা আপডেট | https://example.com/sports.jpg"></textarea>
+        
+        <div class="controls">
+            <div>
+                <label>নিউজ ক্যাটাগরি (কালার):</label>
+                <select id="themeColor" onchange="updateThemePreview()">
+                    <option value="#ff0000">ব্রেকিং নিউজ (লাল)</option>
+                    <option value="#0066ff">ইন্টারন্যাশনাল (নীল)</option>
+                    <option value="#00aa00">খেলাধুলা (সবুজ)</option>
+                    <option value="#ffaa00">বিনোদন (কমলা)</option>
+                </select>
+            </div>
+            <div>
+                <label>পড়ার গতি (Voice Speed):</label>
+                <input type="range" id="voiceSpeed" min="0.5" max="1.5" step="0.1" value="0.9">
+            </div>
+        </div>
+        <button class="start-btn" onclick="startCountdown()">লাইভ শুরু করুন 🔴</button>
     </div>
 </div>
 
-<button id="edit" onclick="resetStudio()">EDIT</button>
+<div id="countdown"></div>
+<button id="btn-close" onclick="exitStudio()">✕</button>
 
 <div id="studio">
-    <div id="screen">
-        <div id="news-container"></div> <div id="bar">
-            <div style="background:#fff; color:#000; padding:0 20px; height:100%; display:flex; align-items:center; font-weight:900;">ব্রেকিং</div>
-            <marquee id="bottom-marquee" style="color:#fff; font-weight:bold; font-size: 20px;">সত্যের সন্ধানে আমরা অবিচল...</marquee>
+    <header>
+        <div class="logo-box">
+            <h1 id="logoName">AI NEWS 24</h1>
+        </div>
+        <div id="clock-box">
+            <div id="live-clock" style="font-size: 24px; font-weight: bold;">00:00:00</div>
+            <div id="live-date" style="font-size: 14px; color: #aaa;">১৬ এপ্রিল ২০২৬</div>
+        </div>
+    </header>
+
+    <div id="display-area">
+        <div id="news-image-container">
+            <img id="news-pic" src="" alt="News Image">
+        </div>
+        <div id="news-card">
+            <h1 id="headline">সংবাদ লোড হচ্ছে...</h1>
         </div>
     </div>
+
+    <footer>
+        <div class="breaking-tag" id="tagText">ব্রেকিং</div>
+        <marquee id="ticker" scrollamount="10"></marquee>
+    </footer>
 </div>
 
 <script>
-    let newsQueue = [];
+    let newsData = [];
     let currentIdx = 0;
+    let isLive = false;
     const synth = window.speechSynthesis;
-    let isRunning = false;
+
+    // Clock
+    function updateClock() {
+        const d = new Date();
+        document.getElementById('live-clock').innerText = d.toLocaleTimeString('en-US', { hour12: false });
+        document.getElementById('live-date').innerText = d.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    setInterval(updateClock, 1000);
+
+    function updateThemePreview() {
+        const color = document.getElementById('themeColor').value;
+        document.documentElement.style.setProperty('--primary', color);
+    }
+
+    function startCountdown() {
+        const text = document.getElementById('newsInput').value.trim();
+        if(!text) return alert("দয়া করে কিছু খবর ইনপুট দিন!");
+
+        newsData = text.split('\n').map(line => {
+            const [msg, img] = line.split('|');
+            return { msg: msg?.trim(), img: img?.trim() };
+        });
+
+        // ক্যাটাগরি টেক্সট আপডেট
+        const sel = document.getElementById('themeColor');
+        document.getElementById('tagText').innerText = sel.options[sel.selectedIndex].text.split(' ')[0];
+
+        document.getElementById('ui').classList.add('hide-ui');
+        const countDiv = document.getElementById('countdown');
+        countDiv.style.display = 'flex';
+        
+        let timeLeft = 3;
+        countDiv.innerText = timeLeft;
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            if(timeLeft <= 0) {
+                clearInterval(timer);
+                countDiv.style.display = 'none';
+                startBroadcasting();
+            }
+            countDiv.innerText = timeLeft;
+        }, 1000);
+    }
 
     function startBroadcasting() {
-        const text = document.getElementById('inputText').value.trim();
-        if (!text) return alert("নিউজ ইনপুট দিন!");
-
-        newsQueue = text.split('\n').filter(line => line.trim() !== "");
+        isLive = true;
         currentIdx = 0;
-        isRunning = true;
-        document.getElementById('ui').classList.add('hide-ui');
-        playNextNews();
+        document.getElementById('ticker').innerText = newsData.map(n => n.msg).join("  ✦  ");
+        showNews();
     }
 
-    function resetStudio() {
-        isRunning = false;
+    function exitStudio() {
+        isLive = false;
         synth.cancel();
         document.getElementById('ui').classList.remove('hide-ui');
-        document.getElementById('news-container').innerHTML = '';
+        document.getElementById('news-card').classList.remove('active');
+        document.getElementById('news-image-container').classList.remove('show');
     }
 
-    function playNextNews() {
-        if (!isRunning) return;
+    function showNews() {
+        if(!isLive) return;
+        if(currentIdx >= newsData.length) currentIdx = 0;
 
-        // যদি সব নিউজ শেষ হয়ে যায়, আবার ১ নম্বর থেকে শুরু হবে
-        if (currentIdx >= newsQueue.length) {
-            currentIdx = 0;
-        }
+        const item = newsData[currentIdx];
+        const card = document.getElementById('news-card');
+        const imgCont = document.getElementById('news-image-container');
+        const imgTag = document.getElementById('news-pic');
 
-        const container = document.getElementById('news-container');
-        container.innerHTML = ''; // আগের নিউজ পুরোপুরি মুছে ফেলা (মেমোরি সেভ)
+        // Reset animations
+        card.classList.remove('active');
+        imgCont.classList.remove('show');
 
-        const newsText = newsQueue[currentIdx];
-        const newsElement = document.createElement('div');
-        newsElement.className = 'news-item';
-        newsElement.innerText = newsText;
-        container.appendChild(newsElement);
-
-        // গতি ক্যালকুলেশন: স্ক্রিন সাইজ এবং টেক্সট লেন্থ অনুযায়ী
-        const duration = (newsText.length * 0.15) + 6; 
-        newsElement.style.animation = `march ${duration}s linear forwards`;
-
-        // ভয়েস ইঞ্জিন
-        const utterance = new SpeechSynthesisUtterance(newsText);
-        utterance.lang = 'bn-BD';
-        utterance.rate = 0.85;
-        synth.speak(utterance);
-
-        // পরের লাইনের টাইমিং (অ্যানিমেশন শেষ হওয়ার সামান্য আগে শুরু হবে যাতে গ্যাপ না থাকে)
         setTimeout(() => {
-            if (isRunning) {
-                currentIdx++;
-                playNextNews();
+            document.getElementById('headline').innerText = item.msg;
+            
+            if(item.img && item.img.startsWith('http')) {
+                imgTag.src = item.img;
+                imgCont.classList.add('show');
             }
-        }, duration * 1000); 
-    }
 
-    // মোবাইল ব্রাউজার সাপোর্ট ফিক্স
-    window.speechSynthesis.onvoiceschanged = () => synth.getVoices();
+            card.classList.add('active');
+
+            // Speech
+            const speech = new SpeechSynthesisUtterance(item.msg);
+            speech.lang = 'bn-BD';
+            speech.rate = parseFloat(document.getElementById('voiceSpeed').value);
+            
+            speech.onend = () => {
+                if(isLive) {
+                    setTimeout(() => {
+                        currentIdx++;
+                        showNews();
+                    }, 2000);
+                }
+            };
+            synth.speak(speech);
+
+        }, 800);
+    }
 </script>
 
 </body>
